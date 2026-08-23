@@ -6,7 +6,14 @@ Each episode gets its own folder:
 ```
 {Podcast Name}/{Episode Title}/01 {Episode Title}.mp3
 {Podcast Name}/{Episode Title}/01 poster.jpg
+{Podcast Name}/{Episode Title}/01 {Episode Title}.lrc
 ```
+
+The `.lrc` file is a synced-lyrics-style transcript, converted from
+whichever transcript the feed provides (SRT preferred, then WebVTT).
+If a feed only offers a format the script doesn't recognize as
+timed cues, the raw transcript is saved as `01 {Episode Title}.transcript.txt`
+instead, so nothing is lost.
 
 ## Setup
 
@@ -23,13 +30,17 @@ Edit `config.json` — one entry per feed:
   "rss_url": "https://.../rss",
   "output_dir": "D:/Podcasts",
   "genre": "Podcast",
-  "check_latest": 5
+  "check_latest": 5,
+  "download_transcript": true
 }
 ```
 
 - `check_latest` — how many of the newest feed entries to look at each
   run (default 5). Already-downloaded episodes are skipped, so this
   just caps how much a brand-new feed will backfill on its first run.
+- `download_transcript` — download and convert the episode transcript
+  to LRC, if the feed provides one (default `true`). Set to `false`
+  to skip this entirely for a given feed.
 
 ### Sort order
 

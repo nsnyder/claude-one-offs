@@ -6,7 +6,8 @@
       "rss_url": "https://feeds.example.com/norah-jones-is-playing-along.rss",
       "output_dir": "D:/Podcasts",
       "genre": "Podcast",
-      "check_latest": 5
+      "check_latest": 5,
+      "download_transcript": true
     }
   ]
 }
