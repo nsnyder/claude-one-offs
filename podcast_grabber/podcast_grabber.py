@@ -8,7 +8,7 @@ episodes, and tags the resulting MP3 files.
 Each episode gets its own folder, laid out like this:
 
     {Podcast Name}/{Episode Title}/01 {Episode Title}.mp3
-    {Podcast Name}/{Episode Title}/01 poster.jpg
+    {Podcast Name}/{Episode Title}/poster.jpg
 
 Run it by hand to test, then point cron at it. It is safe to run
 repeatedly (e.g. every 30 minutes) because it keeps a small state
@@ -581,7 +581,7 @@ def process_feed(feed_config, user_agent, dry_run):
         os.makedirs(episode_dir, exist_ok=True)
 
         mp3_path = os.path.join(episode_dir, f"01 {safe_episode_title}.mp3")
-        image_path = os.path.join(episode_dir, "01 poster.jpg")
+        image_path = os.path.join(episode_dir, "poster.jpg")
 
         # Download the audio.
         download_file(audio_url, mp3_path, user_agent)
