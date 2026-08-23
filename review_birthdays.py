@@ -42,6 +42,49 @@ from googleapiclient.discovery import build
 SCOPES = ["https://www.googleapis.com/auth/contacts"]
 
 
+def get_single_keypress():
+    """
+    Waits for exactly one keypress and returns it as a lowercase character.
+    Unlike input(), this does not wait for the Enter key.
+
+    Windows has its own way of doing this (the msvcrt module).
+    Linux and WSL don't have msvcrt, so we fall back to a termios-based approach instead.
+    """
+    try:
+        # msvcrt only exists on Windows, so this import will fail everywhere else.
+        import msvcrt
+
+        # getch() reads one raw keypress and returns it as bytes.
+        key_bytes = msvcrt.getch()
+
+        # Decode the bytes into a normal string character.
+        key = key_bytes.decode("utf-8", errors="ignore")
+
+    except ImportError:
+        # We're on Linux/WSL/macOS, so use the terminal-settings approach instead.
+        import sys
+        import termios
+        import tty
+
+        # Grab a reference to the current terminal (stdin) so we can restore it afterward.
+        file_descriptor = sys.stdin.fileno()
+        original_settings = termios.tcgetattr(file_descriptor)
+
+        try:
+            # Put the terminal into "raw" mode so it hands us one keypress immediately,
+            # instead of waiting for a full line ending in Enter.
+            tty.setraw(file_descriptor)
+            key = sys.stdin.read(1)
+
+        finally:
+            # Always restore the terminal to its normal mode afterward,
+            # even if something above raised an error.
+            termios.tcsetattr(file_descriptor, termios.TCSADRAIN, original_settings)
+
+    # Normalize to lowercase so "K" and "k" behave the same way.
+    return key.lower()
+
+
 def get_credentials():
     """
     Handles logging in to Google and returns valid credentials.
@@ -228,7 +271,16 @@ def main():
         # k = keep the birthday as-is
         # r = remove it from Calendar and move it into notes
         # q = quit the review early, leaving remaining contacts untouched
-        answer = input(f"{name} — {birthday_str}   [k]eep / [r]emove / [q]uit: ").strip().lower()
+        # print(..., end="", flush=True) is used instead of a normal print()
+        # so the prompt stays on the same line while we wait for a keypress.
+        print(f"{name} — {birthday_str}   [k]eep / [r]emove / [q]uit: ", end="", flush=True)
+
+        # This reads exactly one keypress with no Enter required.
+        answer = get_single_keypress()
+
+        # Raw keypress mode doesn't echo what was typed, so print it ourselves
+        # to keep the terminal output readable.
+        print(answer)
 
         if answer == "q":
             print("Stopping early. No further contacts will be changed.")
@@ -240,7 +292,8 @@ def main():
             removed_count += 1
 
         else:
-            # Any other input (including just pressing Enter) is treated as "keep".
+            # Any key other than "r" or "q" is treated as "keep",
+            # so "k" and everything else (including a stray Enter) falls here.
             print(f"  -> Kept {name}'s birthday as-is.\n")
             kept_count += 1
 
