@@ -3,3 +3,4 @@ credentials.json
 venv/
 token.json
 config.json
+plex_config.json

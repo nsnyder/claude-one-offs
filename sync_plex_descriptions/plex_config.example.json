@@ -1,0 +1,10 @@
+{
+  "plex_url": "https://plex.localhost",
+  "plex_token": "PASTE_YOUR_PLEX_TOKEN_HERE",
+  "library_name": "Audiobooks & Radio",
+  "lock_summary": true,
+  "path_map": {
+    "plex_prefix": "",
+    "local_prefix": ""
+  }
+}
