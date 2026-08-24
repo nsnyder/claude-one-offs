@@ -189,6 +189,12 @@ def get_episode_date(entry):
 
 
 def download_file(url, dest_path, user_agent):
+    if os.path.exists(dest_path):
+        print(
+            f"  [warn] File already exists -- skipping."
+        )
+        return False
+
     """
     Stream a URL down to disk in chunks, so large audio files don't
     have to be held in memory all at once.
@@ -202,6 +208,8 @@ def download_file(url, dest_path, user_agent):
             for chunk in response.iter_content(chunk_size=1024 * 256):
                 if chunk:
                     out_file.write(chunk)
+
+    return True
 
 
 def get_sort_order(podcast_name):
@@ -524,6 +532,7 @@ def process_feed(feed_config, user_agent, dry_run):
     genre = feed_config.get("genre", "Podcast")
     check_latest = feed_config.get("check_latest", 5)
     download_transcript = feed_config.get("download_transcript", True)
+    skip_existing = feed_config.get("skip_existing", False)
 
     print(f"Checking feed: {podcast_name}")
 
@@ -583,8 +592,16 @@ def process_feed(feed_config, user_agent, dry_run):
         mp3_path = os.path.join(episode_dir, f"01 {safe_episode_title}.mp3")
         image_path = os.path.join(episode_dir, "poster.jpg")
 
-        # Download the audio.
-        download_file(audio_url, mp3_path, user_agent)
+        # Download the audio. Returns false if the file already exists.
+        episode_downloaded = download_file(audio_url, mp3_path, user_agent)
+
+        # If the file failed to download, add it as downloaded,
+        # and skip doing anything else.
+        if not episode_downloaded and skip_existing:
+            downloaded_guids.add(guid)
+            state["downloaded_guids"] = list(downloaded_guids)
+            save_state(state_path, state)
+            continue
 
         # Download the artwork, if we found a usable URL for it.
         image_url = get_episode_image_url(entry, fallback_image_url)
